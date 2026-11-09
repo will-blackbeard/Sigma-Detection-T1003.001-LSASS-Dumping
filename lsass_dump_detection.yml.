@@ -1,0 +1,28 @@
+title: Detection of Potential LSASS Memory Dumping via Process Access
+id: 5f3a18a9-4d21-4b15-9c88-123456789abc
+status: experimental
+description: Detects process access requests targeting lsass.exe with high-privilege access masks typical of credential theft tools (e.g., Mimikatz, ProcDump).
+author: Lee Blackbeard
+date: 2026-11-09
+references:
+  - https://attack.mitre.org/techniques/T1003/001/
+logsource:
+  category: process_access
+  product: windows
+detection:
+  selection:
+    TargetImage|endswith: '\lsass.exe'
+    GrantedAccess:
+      - '0x1010'
+      - '0x1F0FFF'
+  filter_legit:
+    SourceImage|endswith:
+      - '\system32\svchost.exe'
+      - '\system32\csrss.exe'
+  condition: selection and not filter_legit
+falsepositives:
+  - Legitimate security agents or system diagnostics tools.
+level: high
+tags:
+  - attack.credential_access
+  - attack.t1003.001
