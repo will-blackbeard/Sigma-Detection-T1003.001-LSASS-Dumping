@@ -1,0 +1,13 @@
+Query 1: Detect LSASS Access Attempts via Sysmon Event ID 10
+index=sysmon EventCode=10 TargetImage="*\lsass.exe"
+| eval GrantedAccessMask=lower(GrantedAccess)
+| search GrantedAccessMask="0x1010" OR GrantedAccessMask="0x1f0fff"
+| stats count min(_time) as first_seen max(_time) as last_seen by Computer, SourceImage, TargetImage, GrantedAccess
+| convert ctime(first_seen) ctime(last_seen)
+| table first_seen, last_seen, Computer, SourceImage, TargetImage, GrantedAccess, count
+
+Query 2: Correlate Process Creation (Event ID 1) with LSASS Access (Event ID 10)
+index=sysmon (EventCode=1 OR EventCode=10)
+| eval Process=coalesce(NewProcessName, SourceImage)
+| stats values(EventCode) as EventCodes, values(TargetImage) as Targets by Computer, Process, ProcessId
+| search EventCodes=1 AND EventCodes=10 AND Targets="*\lsass.exe"
