@@ -1,0 +1,1 @@
+# Sigma-Detection-T1003.001-LSASS-Dumping
